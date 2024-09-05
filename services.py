@@ -16,14 +16,14 @@ def construct_claude_prompt_for_description(user_input, metadata):
     portable Bluetooth speaker that delivers excellent sound quality and has a long battery life. Brand Sony.
     """
    
-    # Generate an example for the third (and subsequent) user input
+    
     user_example = f"""
     Unstructured Input: "{user_input}"
     Metadata: {metadata}
     Descriptive Output:
     """
 
-    # Explanation for metadata handling
+    
     metadata_explanation = """
     Similar to these examples, please process the data and provide a descriptive output based on the user's input and metadata.
     The metadata should be utilized only if:
@@ -31,10 +31,11 @@ def construct_claude_prompt_for_description(user_input, metadata):
     2- The metadata value, regardless of the key, is relevant to the user's input.
     3- The user has not specified the information that the metadata provides.
     4- The descriptive output should be short and concise in one line.
+    5-if the metadata is not related with input text dont talk about it  
     In summary, the metadata should be considered as a fallback that enhances the user's personalization when applicable in the appropriate context.
     """
     
-    # Construct the final prompt
+   
     final_prompt = few_shot_examples + "\n" + user_example + metadata_explanation
 
     return final_prompt
@@ -78,20 +79,20 @@ def generate_embedding(prompt_data):
     accept = "application/json"
     contentType = "application/json"
 
-    # Define the input data
+    
     sample_model_input = {
         "inputText": prompt_data,
         "dimensions": 256,
         "normalize": True
     }
 
-    # Convert input data to JSON
+    
     body = json.dumps(sample_model_input)
 
-    # Get the Bedrock client
+    
     bedrock_client = get_bedrock_client()
 
-    # Make the API request
+    
     response = bedrock_client.invoke_model(
         body=body,
         modelId=modelId,
@@ -99,7 +100,7 @@ def generate_embedding(prompt_data):
         contentType=contentType
     )
 
-    # Process the response
+   
     response_body = json.loads(response.get('body').read())
     embedding = response_body.get("embedding")
     return embedding
@@ -109,7 +110,7 @@ def generate_embedding(prompt_data):
 
 
 def main():
-    user_input = "I'm looking for a wireless mouse that's comfortable for long use and has a long battery life. My budget is around $30."
+    user_input = "laptop."
     metadata = {"gender": "Male", "height": 30.00}
     prompt = construct_claude_prompt_for_description(user_input, metadata)
     response = get_completion(prompt)
