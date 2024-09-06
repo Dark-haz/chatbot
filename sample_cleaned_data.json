@@ -1,0 +1,27 @@
+[
+    {
+        "itemId": 1092,
+        "description": "Sample description for item 1092",
+        "embedding": [1, 2, 3]
+    },
+    {
+        "itemId": 2045,
+        "description": "Sample description for item 2045",
+        "embedding": [4, 5, 6]
+    },
+    {
+        "itemId": 3098,
+        "description": "Sample description for item 3098",
+        "embedding": [7, 8, 9]
+    },
+    {
+        "itemId": 4056,
+        "description": "Sample description for item 4056",
+        "embedding": [10, 11, 12]
+    },
+    {
+        "itemId": 5073,
+        "description": "Sample description for item 5073",
+        "embedding": [13, 14, 15]
+    }
+]
