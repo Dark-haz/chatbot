@@ -1,3 +1,3 @@
-DATABASE_URL = "postgresql://postgres:RPV0VY9RAcDeAcL4hfEj@postgres-db.cjeu04uek25d.us-east-1.rds.amazonaws.com/postgres"
+DATABASE_URL = "postgresql://postgres:1234qwer@database-1.czykooyqkq7y.us-east-1.rds.amazonaws.com:5432/postgres"
 
 VECTOR_DIMENSION = 256

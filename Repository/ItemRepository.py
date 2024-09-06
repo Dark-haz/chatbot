@@ -16,7 +16,7 @@ class ItemRepository(IItemRepository):
         self.session = Session()
 
     def find_KNN(self, vector, limit):
-        query = text(f'SELECT * FROM "Items" ORDER BY embedding <-> :vector LIMIT :limit')
+        query = text(f'SELECT "itemId","description" FROM "Items" ORDER BY embedding <-> :vector LIMIT :limit')
         
         result = self.session.execute(query, {'vector': str(vector), 'limit': limit}).fetchall()
         
