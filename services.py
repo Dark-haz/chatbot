@@ -127,7 +127,7 @@ def generate_embedding(prompt_data):
     
     sample_model_input = {
         "inputText": prompt_data,
-        "dimensions": 256,
+        "dimensions": 512,
         "normalize": True
     }
 
