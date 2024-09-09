@@ -149,7 +149,24 @@ def generate_prompt(input_description, tuples_list):
     
     return prompt
 
+def recommend_products(prompt):
+    try:
+        # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME)
+        bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1')
+        body = json.dumps({
+            "max_tokens": 500,  
+            "messages": [{"role": "user", "content": prompt}],
+            "anthropic_version": "bedrock-2023-05-31"
+        })
 
+        response = bedrock.invoke_model(body=body, modelId="anthropic.claude-3-5-sonnet-20240620-v1:0")
+        response_body = json.loads(response.get("body").read())
+        ss= response_body.get("content")
+        sr = ss[0]['text']
+        return sr
+    except Exception as e:
+        print(f"Error communicating with Claude: {e}")
+        raise e
 
 def main():
     user_input = "  I'm looking for a wireless mouse that's comfortable for long use and has a long battery life. and a pents that's comfy to wear at work. very fast car yes yes"
