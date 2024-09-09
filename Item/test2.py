@@ -2,24 +2,27 @@ import pandas as pd
 import json
 from services import generate_embedding
 
-def embed_amazon_data():
+import pandas as pd
+import json
+from services import generate_embedding
+
+def embed_amazon_data(start_row, num_rows):
     csv_file_path = 'cleaned_filtered_dataset.csv'
     df = pd.read_csv(csv_file_path)
 
-    # Combine text fields into one column
     df['combined_text'] = df[['product_name', 'price', 'amazon_category_and_sub_category', 'product_information']].astype(str).agg(' '.join, axis=1)
 
-    # Select top 100 combined texts
-    combined_text_list = df['combined_text'].head(100).tolist()
+   
+    combined_text_list = df['combined_text'].iloc[start_row:start_row+num_rows].tolist()
 
-    # Generate embeddings and prepare result list
+    
     result = []
     for i in range(len(combined_text_list)):
         rr = generate_embedding(combined_text_list[i])
         dic = {
             "description": combined_text_list[i],
             "embedding": rr,
-            "itemId": df['uniq_id'].iloc[i]  # Use iloc to ensure the correct indexing
+            "itemId": df['uniq_id'].iloc[start_row + i] 
         }
         result.append(dic)
 
@@ -30,7 +33,13 @@ def embed_amazon_data():
     return result
 
 def main():
-    rr=embed_amazon_data()
+    # Set start_row and num_rows for the second 100 rows
+    start_row = 100
+    num_rows = 100
+    rr = embed_amazon_data(start_row, num_rows)
     print(rr)
-if __name__ =="__main__":
+
+if __name__ == "__main__":
     main()
+
+

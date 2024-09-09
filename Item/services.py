@@ -25,11 +25,11 @@ def construct_multishot_prompt(user_input, metadata):
     Descriptive Output:
     Laptop from brand Sony.
 
-    example 4 :
-     Unstructured Input: "I need a green hat."
+    Example 4:
+    Unstructured Input: "I need a green hat."
     Metadata: {"gender": "Female", "previous_brand": "Nike"}
     Descriptive Output:
-   
+    Green hat from brand Nike.
     """
     
     # Format the user input and metadata
@@ -43,6 +43,9 @@ def construct_multishot_prompt(user_input, metadata):
     final_prompt = few_shot_examples + "\n" + user_example
     
     return final_prompt
+
+
+
 
 def get_completion(prompt):
     try:
@@ -156,9 +159,9 @@ def main():
     metadata = {"gender": "Male", "height": 30.00,"brand":"LG"}
     prompt = construct_multishot_prompt(user_input, metadata)
     response = get_completion(prompt)
-    print(response)    
-    # embed= generate_embedding(response[0])
-    # print(embed)
+    
+    embed= generate_embedding(response[0])
+    print(embed)
 
 if __name__ == "__main__":
     main()
