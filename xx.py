@@ -1,6 +1,9 @@
 
 import boto3
 import  json
+
+# > CLAUDE TRAINING 
+
 def construct_multishot_prompt(user_input, metadata):
     # Define the few-shot examples
     few_shot_examples = """
@@ -39,8 +42,10 @@ def construct_multishot_prompt(user_input, metadata):
     final_prompt = few_shot_examples + "\n" + user_example
     
     return final_prompt
+
 REGION_NAME = "us-east-1"
 MODEL_NAME = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
 def get_completion(prompt):
     try:
         # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME)
@@ -60,6 +65,7 @@ def get_completion(prompt):
         print(f"Error communicating with Claude: {e}")
         raise e
 
+
 def main():
 
     user_input = "i need a laptop and pants and a car "
@@ -71,7 +77,8 @@ if __name__=="__main__":
     main()
 
 
-
+# _____ DIFFERENT
+# ? prompt experimenting that haz did with jd
 def construct_claude_prompt_for_description(user_input, metadata):
     # Few-shot examples for the model to learn
     few_shot_examples = """

@@ -1,5 +1,9 @@
 import boto3
 import json
+
+# USER SIDE
+
+# > step 1 : Claude user input processing 
 def construct_multishot_prompt(user_input, metadata):
     # Define the few-shot examples
     few_shot_examples = """
@@ -20,6 +24,7 @@ def construct_multishot_prompt(user_input, metadata):
     Metadata: {"gender": "Female", "previous_brand": "Sony"}
     Descriptive Output:
     Laptop from brand Sony.
+
     example 4 :
      Unstructured Input: "I need a green hat."
     Metadata: {"gender": "Female", "previous_brand": "Nike"}
@@ -39,6 +44,62 @@ def construct_multishot_prompt(user_input, metadata):
     
     return final_prompt
 
+def get_completion(prompt):
+    try:
+        # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME)
+        bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1')
+        body = json.dumps({
+            "max_tokens": 100,  
+            "messages": [{"role": "user", "content": prompt}],
+            "anthropic_version": "bedrock-2023-05-31"
+        })
+
+        response = bedrock.invoke_model(body=body, modelId="anthropic.claude-3-5-sonnet-20240620-v1:0")
+        response_body = json.loads(response.get("body").read())
+        ss= response_body.get("content")
+        sr = ss[0]['text'].split('\n')
+        return sr
+    except Exception as e:
+        print(f"Error communicating with Claude: {e}")
+        raise e
+    
+# > step 2 : TITAN embedd user input 
+
+def generate_embedding(prompt_data):
+    modelId = "amazon.titan-embed-text-v2:0"
+    accept = "application/json"
+    contentType = "application/json"
+
+    
+    sample_model_input = {
+        "inputText": prompt_data,
+        "dimensions": 512,
+        "normalize": True
+    }
+
+    
+    body = json.dumps(sample_model_input)
+
+    
+    bedrock_client = boto3.client(service_name="bedrock-runtime", region_name='us-east-1')
+
+    
+    response = bedrock_client.invoke_model(
+        body=body,
+        modelId=modelId,
+        accept=accept,
+        contentType=contentType
+    )
+
+   
+    response_body = json.loads(response.get('body').read())
+    embedding = response_body.get("embedding")
+    return embedding
+    
+
+# > step 2 : find by KNN using processed user input vector
+
+# > step 3 : Claude product selection
 def generate_prompt(input_description, tuples_list):
     # Format the examples
     examples = [
@@ -88,80 +149,16 @@ def generate_prompt(input_description, tuples_list):
     
     return prompt
 
-REGION_NAME = "us-east-1"
-MODEL_NAME = "anthropic.claude-3-5-sonnet-20240620-v1:0"
-def get_completion(prompt):
-    try:
-        # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME)
-        bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1')
-        body = json.dumps({
-            "max_tokens": 100,  
-            "messages": [{"role": "user", "content": prompt}],
-            "anthropic_version": "bedrock-2023-05-31"
-        })
-
-        response = bedrock.invoke_model(body=body, modelId=MODEL_NAME)
-        response_body = json.loads(response.get("body").read())
-        ss= response_body.get("content")
-        sr = ss[0]['text'].split('\n')
-        return sr
-    except Exception as e:
-        print(f"Error communicating with Claude: {e}")
-        raise e
-
-
-import boto3
-import json
-
-
-
-def get_bedrock_client():
-    """Initialize and return the Bedrock client."""
-    return boto3.client(service_name="bedrock-runtime", region_name='us-east-1')
-
-def generate_embedding(prompt_data):
-    modelId = "amazon.titan-embed-text-v2:0"
-    accept = "application/json"
-    contentType = "application/json"
-
-    
-    sample_model_input = {
-        "inputText": prompt_data,
-        "dimensions": 512,
-        "normalize": True
-    }
-
-    
-    body = json.dumps(sample_model_input)
-
-    
-    bedrock_client = get_bedrock_client()
-
-    
-    response = bedrock_client.invoke_model(
-        body=body,
-        modelId=modelId,
-        accept=accept,
-        contentType=contentType
-    )
-
-   
-    response_body = json.loads(response.get('body').read())
-    embedding = response_body.get("embedding")
-    return embedding
-    
-
-
 
 
 def main():
-    user_input = "  I'm looking for a wireless mouse that's comfortable for long use and has a long battery life. My budget is around $30."
+    user_input = "  I'm looking for a wireless mouse that's comfortable for long use and has a long battery life. and a pents that's comfy to wear at work. very fast car yes yes"
     metadata = {"gender": "Male", "height": 30.00,"brand":"LG"}
     prompt = construct_multishot_prompt(user_input, metadata)
     response = get_completion(prompt)
     print(response)    
-    embed= generate_embedding(response[0])
-    print(embed)
+    # embed= generate_embedding(response[0])
+    # print(embed)
 
 if __name__ == "__main__":
     main()

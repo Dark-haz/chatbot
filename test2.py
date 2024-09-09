@@ -1,5 +1,9 @@
 import pandas as pd
 from services import generate_embedding
+
+
+
+# > TITAN
 def embed_amazon_data():
     csv_file_path = 'cleaned_filtered_dataset.csv'
     df = pd.read_csv(csv_file_path)

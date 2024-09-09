@@ -5,7 +5,7 @@ import boto3
 import json
 
 
-
+# > CLAUDE
 
 def generate_prompt(input_description, tuples_list):
     # Format the examples
@@ -58,6 +58,9 @@ def generate_prompt(input_description, tuples_list):
 
 REGION_NAME = "us-east-1"
 MODEL_NAME = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
+# _ different ones
+# __________________________________________________________________________________________
 def get_completion(prompt):
     try:
         bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1')
@@ -72,11 +75,13 @@ def get_completion(prompt):
         ss = response_body.get("content")
         
         # Extract ID and description directly
-        result = ss[0]['text'].strip()
+        result = ss[0]['text'].strip() #? why
         return result
     except Exception as e:
         print(f"Error communicating with Claude: {e}")
         raise e
+# _END
+
 user_input = "I'm looking for a wireless mouse that's comfortable for long use and has a long battery life. My budget is around $30."
 metadata = {"gender": "Male", "height": 30.00, "brand": "LG"}
 prompt = construct_multishot_prompt(user_input, metadata)
