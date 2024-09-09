@@ -125,16 +125,13 @@ Output:
   I recommend this Rugged Hiking Backpack because it features multiple compartments and is made of waterproof material, providing both durability and ample storage for all your hiking needs. Its rugged design ensures it can withstand tough conditions.
 """
 
-input = """
-This is the input you'll 
-"""
 
 prompt = persona + context + task + examplars  
 
 user_input = """
 Input:
 {
-    "user_query": "I'm looking for a water-resistant smartwatch with fitness tracking.",
+    "user_query": "I'm looking for a stainless steel silverware",
     "item_tuple_list": [
         (932167, "A basic fitness tracker with step counting but no water resistance"),
         (483920, "A water-resistant smartwatch with heart rate monitoring and GPS"),
@@ -156,5 +153,5 @@ Input:
 full_prompt = prompt + user_input
 
 from Item.services import *
-# print(full_prompt)
-print(recommend_products(full_prompt))                       
+print(full_prompt)
+# print(recommend_products(full_prompt))                       
