@@ -13,7 +13,7 @@ class Item(Base):
     
     # Define columns
     id = Column(Integer, primary_key=True, autoincrement=True)
-    itemId = Column(Integer, unique=True, nullable=False)
+    itemId = Column(String, unique=True, nullable=False)
     description = Column(String, nullable=True)
     embedding =  Column(Vector(VECTOR_DIMENSION)) 
 
