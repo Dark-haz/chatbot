@@ -16,8 +16,11 @@ def execution():
     item_repository=ItemRepository()
     similar_items = item_repository.find_KNN(user_input_embed,10)
 
+
     product_selection_prompt= recommend_product_prompt(structured_user_query,similar_items)
     result=invoke_bedrock_claude(product_selection_prompt,1000)
+
+   
     return result
     
     
