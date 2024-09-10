@@ -44,6 +44,26 @@ def process_user_input_prompt(user_input, metadata):
     
     return final_prompt
 
+def invoke_bedrock_claude(prompt, max_tokens): 
+    try: 
+        # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME) 
+        bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1') 
+        body = json.dumps({ 
+            "max_tokens": max_tokens,   
+            "messages": [{"role": "user", "content": prompt}], 
+            "anthropic_version": "bedrock-2023-05-31" 
+        }) 
+ 
+        response = bedrock.invoke_model(body=body, modelId="anthropic.claude-3-5-sonnet-20240620-v1:0") 
+        response_body = json.loads(response.get("body").read()) 
+        response = response_body.get("content") 
+        response_dict = response[0]
+
+        model_text_output = response_dict['text'] 
+        return model_text_output 
+    except Exception as e: 
+        print(f"Error communicating with Claude: {e}") 
+        raise e
 
 # def invoke_bedrock_claude(prompt):
 #     try:
@@ -218,26 +238,7 @@ def recommend_product_prompt(user_query , available_items) :
     full_prompt = prompt + user_input
     return full_prompt
 
-def invoke_bedrock_claude(prompt, max_tokens): 
-    try: 
-        # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME) 
-        bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1') 
-        body = json.dumps({ 
-            "max_tokens": max_tokens,   
-            "messages": [{"role": "user", "content": prompt}], 
-            "anthropic_version": "bedrock-2023-05-31" 
-        }) 
- 
-        response = bedrock.invoke_model(body=body, modelId="anthropic.claude-3-5-sonnet-20240620-v1:0") 
-        response_body = json.loads(response.get("body").read()) 
-        response = response_body.get("content") 
-        response_dict = response[0]
 
-        model_text_output = response_dict['text'] 
-        return model_text_output 
-    except Exception as e: 
-        print(f"Error communicating with Claude: {e}") 
-        raise e
 
 def main():
     # user_input = "  I'm looking for a wireless mouse that's comfortable for long use and has a long battery life. and a pents that's comfy to wear at work. very fast car yes yes"
