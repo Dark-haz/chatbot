@@ -2,6 +2,10 @@ from flask import request, jsonify
 import json
 from Item.services import process_user_input_prompt, invoke_bedrock_claude, invoke_bedrock_titan,recommend_product_prompt , invoke_bedrock_claude
 from Item.Repository.ItemRepository import ItemRepository
+import xml.etree.ElementTree as ET
+import xmltodict
+import json
+
 def execution():
     # TODO : middleware
     user_input = request.json.get("user_input")
@@ -20,7 +24,16 @@ def execution():
     product_selection_prompt= recommend_product_prompt(structured_user_query,similar_items)
     result=invoke_bedrock_claude(product_selection_prompt,1000)
 
+    try:
+        root = ET.fromstring(result)
+    except:
+        return result
+
+    data_dict = xmltodict.parse(result)
+
+    json_data = json.dumps(data_dict, indent=4)
+
+    return json_data
    
-    return result
     
     

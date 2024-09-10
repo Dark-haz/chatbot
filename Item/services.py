@@ -46,7 +46,6 @@ def process_user_input_prompt(user_input, metadata):
 
 def invoke_bedrock_claude(prompt, max_tokens): 
     try: 
-        # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME) 
         bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1') 
         body = json.dumps({ 
             "max_tokens": max_tokens,   
@@ -64,25 +63,6 @@ def invoke_bedrock_claude(prompt, max_tokens):
     except Exception as e: 
         print(f"Error communicating with Claude: {e}") 
         raise e
-
-# def invoke_bedrock_claude(prompt):
-#     try:
-#         # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME)
-#         bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1')
-#         body = json.dumps({
-#             "max_tokens": 100,  
-#             "messages": [{"role": "user", "content": prompt}],
-#             "anthropic_version": "bedrock-2023-05-31"
-#         })
-
-#         response = bedrock.invoke_model(body=body, modelId="anthropic.claude-3-5-sonnet-20240620-v1:0")
-#         response_body = json.loads(response.get("body").read())
-#         ss= response_body.get("content")
-#         sr = ss[0]['text'].split('\n')
-#         return sr
-#     except Exception as e:
-#         print(f"Error communicating with Claude: {e}")
-#         raise e
     
 # > step 2 : TITAN embedd user input 
 
@@ -142,8 +122,28 @@ def recommend_product_prompt(user_query , available_items) :
     }
     """
 
+    xml_input_format = """
+    <user_input>
+        <user_query>user query</user_query>
+        <item_tuple_list>
+            <item>
+                <id>ItemId1</id>
+                <description>Item description 1</description>
+            </item>
+            <item>
+                <id>ItemId2</id>
+                <description>Item description 2</description>
+            </item>
+            <item>
+                <id>ItemId3</id>
+                <description>Item description 3</description>
+            </item>
+        </item_tuple_list>
+    </user_input>
+"""
+
     context = f"""
-    You will receive an input in the following format:
+    You will receive a user input in the following format:
 
     1. **user_query**: A string describing what the user is looking for. This query outlines the user's needs, preferences, or requirements.
 
@@ -151,18 +151,28 @@ def recommend_product_prompt(user_query , available_items) :
     - **Item ID**: A unique identifier for the item.
     - **Item Description**: A string that describes the item, including its features, characteristics, and any other relevant details.
 
-    {input_format}
+    {xml_input_format}
     """
 
 
 
-    output_format = """
+    bulleted_output_format = """
     Example Output Format:
 
     - **Item ID**: [ItemId]
     - **Item Name**: [Derived Item Name]
     
     I recommend this [Derived Item Name] because it [briefly explain its main features and benefits]. This item closely matches your needs and offers [mention how it aligns with the user query].
+    """
+
+    xmp_output_format = """
+    <recommendations>
+        <item>
+            <id>[ItemId]</id>
+            <name>[Derived Item Name]</name>
+            <description>I recommend this [Derived Item Name] because it [briefly explain its main features and benefits]. This item closely matches your needs and offers [mention how it aligns with the user query].</description>
+        </item>
+    </recommendations>
     """
 
     tone = """
@@ -180,12 +190,12 @@ def recommend_product_prompt(user_query , available_items) :
 
     {tone}
 
-    Present the response using bullet points, with one bullet point per recommended item.
+    Present the response using XML, with one <item> element per recommended item inside the <recommendations> parent element.
 
-    {output_format}
+    {xmp_output_format}
     """
 
-    examplars = """
+    bulleted_examplars = """
     Example 1:
     Input:
     {
@@ -221,8 +231,69 @@ def recommend_product_prompt(user_query , available_items) :
     I recommend this Rugged Hiking Backpack because it features multiple compartments and is made of waterproof material, providing both durability and ample storage for all your hiking needs. Its rugged design ensures it can withstand tough conditions.
     """
 
+    xml_examplars = """
+    <examplars>
+        <example>
+            <user_input>
+                <user_query>I need a gadget that helps with fitness tracking and is water-resistant.</user_query>
+                <item_tuple_list>
+                    <item>
+                        <id>1</id>
+                        <description>A sleek fitness tracker with heart rate monitoring and water resistance</description>
+                    </item>
+                    <item>
+                        <id>2</id>
+                        <description>A stylish smartwatch with a large screen and multiple apps</description>
+                    </item>
+                    <item>
+                        <id>3</id>
+                        <description>A basic pedometer that counts steps but is not water-resistant</description>
+                    </item>
+                </item_tuple_list>
+            </user_input>
+            
+            <output>
+                <recommendation>
+                    <id>1</id>
+                    <name>Fitness Tracker</name>
+                    <description>I recommend this Fitness Tracker because it offers comprehensive heart rate monitoring and is water-resistant, making it perfect for tracking your fitness activities even in wet conditions. Its sleek design also adds to its appeal.</description>
+                </recommendation>
+            </output>
+        </example>
 
-    prompt = persona + context + task + examplars  
+        <example>
+            <user_input>
+                <user_query>I'm looking for a durable backpack for hiking with plenty of storage space.</user_query>
+                <item_tuple_list>
+                    <item>
+                        <id>1</id>
+                        <description>A rugged hiking backpack with multiple compartments and waterproof material</description>
+                    </item>
+                    <item>
+                        <id>2</id>
+                        <description>A casual daypack with a simple design and limited storage</description>
+                    </item>
+                    <item>
+                        <id>3</id>
+                        <description>A stylish messenger bag suitable for urban use but not designed for hiking</description>
+                    </item>
+                </item_tuple_list>
+            </user_input>
+            
+            <output>
+                <recommendation>
+                    <id>1</id>
+                    <name>Rugged Hiking Backpack</name>
+                    <description>I recommend this Rugged Hiking Backpack because it features multiple compartments and is made of waterproof material, providing both durability and ample storage for all your hiking needs. Its rugged design ensures it can withstand tough conditions.</description>
+                </recommendation>
+            </output>
+        </example>
+        
+    </examplars>
+    """
+
+
+    prompt = persona + context + task + xml_examplars  
 
     user_input = f"""
     Input:
@@ -232,10 +303,24 @@ def recommend_product_prompt(user_query , available_items) :
     }}
     """
 
-    print(user_input)
+    generate_items_xml = lambda item_tuple_list: "".join(
+    f"""
+    <item>
+        <id>{item[0]}</id>
+        <description>{item[1]}</description>
+    </item>""" for item in item_tuple_list
+)
+
+    xml_user_input = f"""
+    <user_input>
+        <user_query>{user_query}</user_query>
+        <item_tuple_list>{generate_items_xml(available_items)}
+        </item_tuple_list>
+    </user_input>
+    """
 
     # Appending user input to the prompt
-    full_prompt = prompt + user_input
+    full_prompt = prompt + xml_user_input
     return full_prompt
 
 
