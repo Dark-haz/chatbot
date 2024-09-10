@@ -9,7 +9,7 @@ import random
 
 import boto3
 import json
-
+from config.static import *
 
 
 def get_bedrock_client():
@@ -24,7 +24,7 @@ def generate_embedding(prompt_data):
     
     sample_model_input = {
         "inputText": prompt_data,
-        "dimensions": 256,
+        "dimensions": VECTOR_DIMENSION,
         "normalize": True
     }
 

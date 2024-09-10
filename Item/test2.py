@@ -1,10 +1,10 @@
 import pandas as pd
 import json
-from services import generate_embedding
+from services import invoke_bedrock_titan
 
 import pandas as pd
 import json
-from services import generate_embedding
+from services import invoke_bedrock_titan
 
 def embed_amazon_data(start_row, num_rows):
     csv_file_path = 'cleaned_filtered_dataset.csv'
@@ -18,7 +18,7 @@ def embed_amazon_data(start_row, num_rows):
     
     result = []
     for i in range(len(combined_text_list)):
-        rr = generate_embedding(combined_text_list[i])
+        rr = invoke_bedrock_titan(combined_text_list[i])
         dic = {
             "description": combined_text_list[i],
             "embedding": rr,

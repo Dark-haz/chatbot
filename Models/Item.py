@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import ARRAY
 from pgvector.sqlalchemy import Vector
@@ -13,8 +13,8 @@ class Item(Base):
     
     # Define columns
     id = Column(Integer, primary_key=True, autoincrement=True)
-    itemId = Column(String, unique=True, nullable=False)
-    description = Column(String, nullable=True)
+    itemId = Column(Text, unique=True, nullable=False)
+    description = Column(Text, nullable=True)
     embedding =  Column(Vector(VECTOR_DIMENSION)) 
 
     def to_dict(self):

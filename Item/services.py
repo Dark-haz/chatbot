@@ -1,10 +1,10 @@
 import boto3
 import json
-
+from config.static import *
 # USER SIDE
 
 # > step 1 : Claude user input processing 
-def construct_multishot_prompt(user_input, metadata):
+def process_user_input_prompt(user_input, metadata):
     # Define the few-shot examples
     few_shot_examples = """
     Example 1:
@@ -45,30 +45,28 @@ def construct_multishot_prompt(user_input, metadata):
     return final_prompt
 
 
+# def invoke_bedrock_claude(prompt):
+#     try:
+#         # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME)
+#         bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1')
+#         body = json.dumps({
+#             "max_tokens": 100,  
+#             "messages": [{"role": "user", "content": prompt}],
+#             "anthropic_version": "bedrock-2023-05-31"
+#         })
 
-
-def get_completion(prompt):
-    try:
-        # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME)
-        bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1')
-        body = json.dumps({
-            "max_tokens": 100,  
-            "messages": [{"role": "user", "content": prompt}],
-            "anthropic_version": "bedrock-2023-05-31"
-        })
-
-        response = bedrock.invoke_model(body=body, modelId="anthropic.claude-3-5-sonnet-20240620-v1:0")
-        response_body = json.loads(response.get("body").read())
-        ss= response_body.get("content")
-        sr = ss[0]['text'].split('\n')
-        return sr
-    except Exception as e:
-        print(f"Error communicating with Claude: {e}")
-        raise e
+#         response = bedrock.invoke_model(body=body, modelId="anthropic.claude-3-5-sonnet-20240620-v1:0")
+#         response_body = json.loads(response.get("body").read())
+#         ss= response_body.get("content")
+#         sr = ss[0]['text'].split('\n')
+#         return sr
+#     except Exception as e:
+#         print(f"Error communicating with Claude: {e}")
+#         raise e
     
 # > step 2 : TITAN embedd user input 
 
-def generate_embedding(prompt_data):
+def invoke_bedrock_titan(prompt_data):
     modelId = "amazon.titan-embed-text-v2:0"
     accept = "application/json"
     contentType = "application/json"
@@ -76,7 +74,7 @@ def generate_embedding(prompt_data):
     
     sample_model_input = {
         "inputText": prompt_data,
-        "dimensions": 256,
+        "dimensions": VECTOR_DIMENSION,
         "normalize": True
     }
 
@@ -103,65 +101,153 @@ def generate_embedding(prompt_data):
 # > step 2 : find by KNN using processed user input vector (inside controller)
 
 # > step 3 : Claude product selection
-def generate_prompt(input_description, tuples_list):
-    # Format the examples
-    examples = [
-        {
-            "input_description": "A bright red apple",
-            "tuples_list": [
-                (1, "A green apple that is sour"),
-                (2, "A bright red juicy apple"),
-                (3, "A yellow banana")
-            ],
-            "output": "ID: 2, Description: 'A bright red juicy apple'"
-        },
-        {
-            "input_description": "A fast black car",
-            "tuples_list": [
-                (1, "A blue bicycle with a basket"),
-                (2, "A black sports car that is very fast"),
-                (3, "A white truck for heavy loads")
-            ],
-            "output": "ID: 2, Description: 'A black sports car that is very fast'"
-        }
-    ]
-    
-    # Format the examples into the prompt string
-    examples_text = "\n\n".join(
-        f"**Example:**\n"
-        f"**Input description:** \"{example['input_description']}\"\n"
-        f"**List of tuples:**\n"
-        f"{' '.join([f'- ({t[0]}, \"{t[1]}\")' for t in example['tuples_list']])}\n"
-        f"**Output:**\n"
-        f"{example['output']}"
-        for example in examples
-    )
-    
-    # Generate the prompt
-    prompt = (
-        f"You are given an input description and a list of tuples where each tuple contains an ID and a description. "
-        f"Your task is to find the tuple whose description matches the input description most closely. "
-        f"Return only the ID and the best-matching description, without any additional explanation. Here's how to proceed:\n\n"
-        f"{examples_text}\n\n"
-        f"**Now, process the following:**\n"
-        f"**Input description:** \"{input_description}\"\n"
-        f"**List of tuples:**\n"
-        f"{' '.join([f'- ({t[0]}, \"{t[1]}\")' for t in tuples_list])}\n\n"
-        f"**Return:** The ID and the best-matching description only."
-    )
-    
-    return prompt
+def recommend_product_prompt(user_query , available_items) :
+    persona = """
+    You are a highly skilled and experienced professional salesman with extensive knowledge of various products. 
+    Your job is to provide personalized product recommendations based on the customer's needs. 
+    You understand how to analyze product features, match them to user requirements, and persuade customers with thoughtful and helpful suggestions. 
+    You always remain courteous, helpful, and detail-oriented.
+    """
 
 
+    input_format = """
+    Example Input Format:
+    {
+        "user_query": "user query",
+        "item_tuple_list": [
+            (ItemId1, "Item description 1"),
+            (ItemId2, "Item description 2"),
+            (ItemId3, "Item description 3")
+        ]
+    }
+    """
+
+    context = f"""
+    You will receive an input in the following format:
+
+    1. **user_query**: A string describing what the user is looking for. This query outlines the user's needs, preferences, or requirements.
+
+    2. **item_tuple_list**: A list of tuples where each tuple contains:
+    - **Item ID**: A unique identifier for the item.
+    - **Item Description**: A string that describes the item, including its features, characteristics, and any other relevant details.
+
+    {input_format}
+    """
+
+
+
+    output_format = """
+    Example Output Format:
+
+    - **Item ID**: [ItemId]
+    - **Item Name**: [Derived Item Name]
+    
+    I recommend this [Derived Item Name] because it [briefly explain its main features and benefits]. This item closely matches your needs and offers [mention how it aligns with the user query].
+    """
+
+    tone = """
+    The tone of the response should be friendly and enthusiastic, reflecting professionalism and attentiveness.
+    """
+
+    task = f"""
+    Your task is to analyze the user query and compare it with the descriptions in the item tuple list. 
+    Select the most relevant items that align with the user's needs based on their query. 
+    For each selected item, generate a recommendation response in the following format:
+
+    - Provide the **Item ID**.
+    - Derive and present the **Item Name** based on the description.
+    - As a professional salesman, give a persuasive explanation of why the user would want this item, using the description to highlight its features and benefits. Keep the explanation concise and ensure it does not exceed two lines.
+
+    {tone}
+
+    Present the response using bullet points, with one bullet point per recommended item.
+
+    {output_format}
+    """
+
+    examplars = """
+    Example 1:
+    Input:
+    {
+        "user_query": "I need a gadget that helps with fitness tracking and is water-resistant.",
+        "item_tuple_list": [
+            (1, "A sleek fitness tracker with heart rate monitoring and water resistance"),
+            (2, "A stylish smartwatch with a large screen and multiple apps"),
+            (3, "A basic pedometer that counts steps but is not water-resistant")
+        ]
+    }
+
+    Output:
+    - **Item ID**: 1
+    - **Item Name**: Fitness Tracker
+    
+    I recommend this Fitness Tracker because it offers comprehensive heart rate monitoring and is water-resistant, making it perfect for tracking your fitness activities even in wet conditions. Its sleek design also adds to its appeal.
+
+    Example 2:
+    Input:
+    {
+        "user_query": "I'm looking for a durable backpack for hiking with plenty of storage space.",
+        "item_tuple_list": [
+            (1, "A rugged hiking backpack with multiple compartments and waterproof material"),
+            (2, "A casual daypack with a simple design and limited storage"),
+            (3, "A stylish messenger bag suitable for urban use but not designed for hiking")
+        ]
+    }
+
+    Output:
+    - **Item ID**: 1
+    - **Item Name**: Rugged Hiking Backpack
+    
+    I recommend this Rugged Hiking Backpack because it features multiple compartments and is made of waterproof material, providing both durability and ample storage for all your hiking needs. Its rugged design ensures it can withstand tough conditions.
+    """
+
+
+    prompt = persona + context + task + examplars  
+
+    user_input = f"""
+    Input:
+    {{
+        "user_query": {user_query},
+        "item_tuple_list": {available_items}
+    }}
+    """
+
+    print(user_input)
+
+    # Appending user input to the prompt
+    full_prompt = prompt + user_input
+    return full_prompt
+
+def invoke_bedrock_claude(prompt, max_tokens): 
+    try: 
+        # bedrock = boto3.client(service_name="bedrock-runtime", region_name=REGION_NAME) 
+        bedrock = boto3.client(service_name="bedrock-runtime", region_name='us-east-1') 
+        body = json.dumps({ 
+            "max_tokens": max_tokens,   
+            "messages": [{"role": "user", "content": prompt}], 
+            "anthropic_version": "bedrock-2023-05-31" 
+        }) 
+ 
+        response = bedrock.invoke_model(body=body, modelId="anthropic.claude-3-5-sonnet-20240620-v1:0") 
+        response_body = json.loads(response.get("body").read()) 
+        response = response_body.get("content") 
+        response_dict = response[0]
+
+        model_text_output = response_dict['text'] 
+        return model_text_output 
+    except Exception as e: 
+        print(f"Error communicating with Claude: {e}") 
+        raise e
 
 def main():
-    user_input = "  I'm looking for a wireless mouse that's comfortable for long use and has a long battery life. and a pents that's comfy to wear at work. very fast car yes yes"
-    metadata = {"gender": "Male", "height": 30.00,"brand":"LG"}
-    prompt = construct_multishot_prompt(user_input, metadata)
-    response = get_completion(prompt)
+    # user_input = "  I'm looking for a wireless mouse that's comfortable for long use and has a long battery life. and a pents that's comfy to wear at work. very fast car yes yes"
+    # metadata = {"gender": "Male", "height": 30.00,"brand":"LG"}
+    # prompt = process_user_input_prompt(user_input, metadata)
+    # response = invoke_bedrock_claude(prompt)
     
-    embed= generate_embedding(response[0])
-    print(embed)
+    # embed= invoke_bedrock_titan(response[0])
+    # print(embed)
+    print(invoke_bedrock_claude("hello world"))
 
 if __name__ == "__main__":
     main()

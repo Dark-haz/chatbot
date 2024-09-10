@@ -1,24 +1,22 @@
 from flask import request, jsonify
 import json
-from Item.services import construct_multishot_prompt, get_completion, generate_embedding,generate_prompt
+from Item.services import process_user_input_prompt, invoke_bedrock_claude, invoke_bedrock_titan,recommend_product_prompt , invoke_bedrock_claude
 from Item.Repository.ItemRepository import ItemRepository
 def execution():
     user_input = request.json.get("user_input")
     metadata = request.json.get("metadata")
 
-        # Construct the prompt using the provided input and metadata
-    prompt = construct_multishot_prompt(user_input, metadata)
-    response = get_completion(prompt)
-    embed= generate_embedding(response[0])
-    ss=ItemRepository()
-    rr=ss.find_KNN(embed,3)
-    prompt2= generate_prompt(response,rr)
-    result=get_completion(prompt2)
-    print(response)
+    user_input_processing_prompt = process_user_input_prompt(user_input, metadata)
+    
+    structured_user_input = invoke_bedrock_claude(user_input_processing_prompt,100).split('\n')[0]
+
+    user_input_embed = invoke_bedrock_titan(structured_user_input)
+    
+    item_repository=ItemRepository()
+    similar_items = item_repository.find_KNN(user_input_embed,10)
+
+    product_selection_prompt= recommend_product_prompt(structured_user_input,similar_items)
+    result=invoke_bedrock_claude(product_selection_prompt)
     return result
     
     
-
-
-
-
