@@ -26,14 +26,16 @@ def execution():
 
     try:
         root = ET.fromstring(result)
-    except:
-        return result
+    except: 
+        print("result :" + result)
+        return jsonify(result), 404 
 
     data_dict = xmltodict.parse(result)
 
-    json_data = json.dumps(data_dict, indent=4)
-
-    return json_data
+    # json_data = json.dumps(data_dict, indent=4)
+    # print("json data" + json_data)
+    
+    return jsonify(data_dict), 200
    
     
     
