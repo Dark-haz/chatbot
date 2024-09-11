@@ -1,10 +1,18 @@
 version: 0.2
 
+env:
+  variables:
+    DOCKER_USERNAME: "dmfwea"
+    DOCKER_PASSWORD: "qj!)n_U8aBvq,f)"
+  
 phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 590183986692.dkr.ecr.us-east-1.amazonaws.com
+      - echo "Loggin in to Docker Hub"
+      - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
+      
   build:
     commands:
       - echo Build started on `date`
