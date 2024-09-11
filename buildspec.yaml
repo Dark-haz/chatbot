@@ -12,21 +12,24 @@ phases:
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 590183986692.dkr.ecr.us-east-1.amazonaws.com
       - echo "Loggin in to Docker Hub"
       - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
-      
+
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t cdk-hnb659fds-container-assets-590183986692-us-east-1 .
-      - docker tag cdk-hnb659fds-container-assets-590183986692-us-east-1:latest 590183986692.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-590183986692-us-east-1:latest
+      - docker build -t chatbot .
+      - docker tag chatbot:latest 590183986692.dkr.ecr.us-east-1.amazonaws.com/chatbot:latest
   post_build:
     commands:
       - echo Pushing the Docker image...
-      - docker push 590183986692.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-590183986692-us-east-1:latest
+      - docker push 590183986692.dkr.ecr.us-east-1.amazonaws.com/chatbot:latest
       - echo Build completed on `date`
 
-artifacts:
-  files:
-    - chatbot-build-artifact.zip
-  base-directory: .
-  discard-paths: yes
+      # - echo Creating artifact ZIP file...
+      # - zip -r chatbot-build-artifact.zip path/to/your/files
+
+# artifacts:
+#   files:
+#     - chatbot-build-artifact.zip
+#   base-directory: .
+#   discard-paths: yes
