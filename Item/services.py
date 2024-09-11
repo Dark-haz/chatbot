@@ -181,7 +181,7 @@ def recommend_product_prompt(user_query , available_items) :
 
     task = f"""
     Your task is to analyze the user query and compare it with the descriptions in the item tuple list. 
-    Select the most relevant items that align with the user's needs based on their query. 
+    Select the most relevant items that align partially or fully with the user's needs based on their query . 
     For each selected item, generate a recommendation response in the following format:
 
     - Provide the **Item ID**.
@@ -190,9 +190,15 @@ def recommend_product_prompt(user_query , available_items) :
 
     {tone}
 
-    Present the response using XML, with one <item> element per recommended item inside the <recommendations> parent element.
+    If you found related items present them using XML only with no additional text, with one <item> element per recommended item inside the <recommendations> parent element like the following:
+    
 
     {xmp_output_format}
+
+    if you find items that partially satisfies the user's query return only these items as XML with no additional input
+    For example : user wants a train and sock and only trains are available , return items that are partially relevent which in this case are trains items and ignore the sock query
+    
+    If no item satisfies partially or fully with  the user's query , return only a text response that you tailor telling that no item was found that matches their needs , text only with no XML involved
     """
 
     bulleted_examplars = """
