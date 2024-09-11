@@ -16,3 +16,9 @@ phases:
       - echo Pushing the Docker image...
       - docker push 590183986692.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-590183986692-us-east-1:latest
       - echo Build completed on `date`
+
+artifacts:
+  files:
+    - chatbot-build-artifact.zip
+  base-directory: .
+  discard-paths: yes
