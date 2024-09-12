@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 from flask import request, jsonify
 import json
 from Item.services import process_user_input_prompt, invoke_bedrock_claude, invoke_bedrock_titan, recommend_product_prompt
@@ -6,6 +7,7 @@ import xml.etree.ElementTree as ET
 import xmltodict
 import json
 from Item.input_schema import validate_user_input_data
+
 def execution():
     # Middleware for validation
     validation_error = validate_user_input_data()
@@ -28,15 +30,14 @@ def execution():
     result = invoke_bedrock_claude(product_selection_prompt, 1000)
 
     try:
-        root = ET.fromstring(result)
+        soup = BeautifulSoup(result, "xml")
+        root = ET.fromstring(str(soup))
     except: 
         print("result :" + result)
         return jsonify(result), 404 
 
-    data_dict = xmltodict.parse(result)
+    data_dict = xmltodict.parse(str(soup))
 
-
-    
     return jsonify(data_dict), 200
    
     

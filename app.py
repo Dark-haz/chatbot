@@ -1,4 +1,5 @@
 from Item.routes import create_app
+from bs4 import BeautifulSoup
 from flask_cors import CORS
 
 app = create_app()
